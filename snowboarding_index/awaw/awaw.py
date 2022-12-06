@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 
-def fetch_conditions(location: str = None, num_periods: int = 1) -> dict:
+def fetch_conditions(location: str = None, num_hours: int = 1) -> dict:
     load_dotenv()
 
     if not location:
@@ -12,7 +12,7 @@ def fetch_conditions(location: str = None, num_periods: int = 1) -> dict:
     endpoint = "https://api.aerisapi.com/conditions/"
     params = {
         "format": "json",
-        "to": f"+{num_periods}hours",
+        "to": f"+{num_hours}hours",
         "filter": "1hour",
         # "fields": "",
         # "plimit": 4,

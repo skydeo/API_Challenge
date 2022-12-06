@@ -2,8 +2,8 @@ import argparse
 from collections import namedtuple
 from typing import Union
 
-from snowboarding_index.test_data.test_data import test_data
 from snowboarding_index.transform_data.index_to_json import index_to_json
+from snowboarding_index.awaw.awaw import fetch_conditions
 
 
 def evaluate_conditions(conditions: dict) -> int:
@@ -167,7 +167,8 @@ def run() -> None:
         description="Calculate the Snowboarding Index (SBI) for a location.",
     )
     parser.add_argument(
-        "location",
+        "-l",
+        "--location",
         help="Location to find SBI. Enter a ZIP code or human-readable location (e.g., Minneapolis, MN)",
     )
     parser.add_argument(
@@ -182,12 +183,21 @@ def run() -> None:
     location = args.location
     return_json = args.json
 
-    sbi = calculate_snowboarding_index(test_data(), json_format=return_json)
+    conditions = fetch_conditions(location=location, num_hours=8)
+    place_name = (
+        conditions["response"][0]["place"]["name"].title()
+        + ", "
+        + conditions["response"][0]["place"]["state"].upper()
+        + ", "
+        + conditions["response"][0]["place"]["country"].upper()
+    )
+
+    sbi = calculate_snowboarding_index(conditions, json_format=return_json)
     if return_json:
         print(sbi)
     else:
         print(
-            f"The snowboarding index for {location} is: {sbi.index} ({sbi.index_eng})"
+            f"The snowboarding index for {place_name} is: {sbi.index} ({sbi.index_eng})"
         )
 
 
