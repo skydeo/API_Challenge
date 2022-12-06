@@ -1,3 +1,4 @@
+import argparse
 from collections import namedtuple
 from typing import Union
 
@@ -161,7 +162,26 @@ def calculate_snowboarding_index(
 
 
 def run() -> None:
-    return_json = False
+    parser = argparse.ArgumentParser(
+        prog="SBI Calculator",
+        description="Calculate the Snowboarding Index (SBI) for a location.",
+    )
+    parser.add_argument(
+        "location",
+        help="Location to find SBI. Enter a ZIP code or human-readable location (e.g., Minneapolis, MN)",
+    )
+    parser.add_argument(
+        "-j",
+        "--json",
+        action="store_true",
+        help="Display SBI in a JSON format matching the AerisWeather Index endpoint.",
+    )
+
+    args = parser.parse_args()
+
+    location = args.location
+    return_json = args.json
+
     sbi = calculate_snowboarding_index(test_data(), json_format=return_json)
     if return_json:
         print(sbi)
