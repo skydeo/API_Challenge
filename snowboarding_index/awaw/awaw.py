@@ -4,6 +4,19 @@ import os
 
 
 def fetch_conditions(location: str = None, num_hours: int = 1) -> dict:
+    """Fetch conditions at a give location from the AerisWeather conditions
+    endpoint.
+
+    Optional parameters:
+        location: string representing place name. If not provided, use
+                  AerisWeather's IP geolocation feature to chose location.
+        num_hours: number of hours ahead to fetch as well
+
+    This function will fetch data from the conditions endpoint for a supplied
+    (or guessed) location. If the request was successful, the JSON can be
+    decoded, and the API query was successful, return a dict representation of
+    the retreived JSON.
+    """
     load_dotenv()
 
     if not location:

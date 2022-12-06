@@ -23,7 +23,7 @@ def evaluate_conditions(conditions: dict) -> int:
         snowIN: proportional scale from min 0.1 up to max of 0.5in/hr
         snowRateIN: proportional scale frommin 0.05  to max of 0.1in/hr
         tempC: binary, must be below freezing
-        feelslikeC: scales down from target value to +/- range on both sides of target
+        feelslikeC: scales down from target value (2C)to +/- range (12C) on both sides of target
         windSpeedMPH: inverse scale from min 0mph to max 20mph
     """
 
@@ -36,10 +36,10 @@ def evaluate_conditions(conditions: dict) -> int:
     }
 
     rules = {
-        "snowIN": {"min": 0.1, "max": 0.3},
-        "snowRateIN": {"min": 0.01, "max": 0.05},
+        "snowIN": {"min": 0.1, "max": 0.5},
+        "snowRateIN": {"min": 0.05, "max": 0.1},
         "tempC": {"max": 0},
-        "feelslikeC": {"target": 2, "range": 14},
+        "feelslikeC": {"target": 2, "range": 12},
         "windSpeedMPH": {"target": 0, "upper_bound": 20},
     }
 
@@ -110,13 +110,15 @@ def calculate_snowboarding_index(
 ) -> Union[int, str]:
     """Calculate the Snowboarding Index (SBI).
 
-    Keyword arguments:
+    Keyword parameter:
         conditions: dictionary representation of a return from the
                     AerisWeather conditions endpoint
-        return_json: return a formatted JSON string (default False)
+    Optional parameter:
+        return_json: (default False) return a JSON string formatted
+                     to match the AerisWeather Index API
 
-    This function takes a dict (converted from JSON) of the current and future
-    12 hours of conditions at a location from the AerisWeather conditions endpoint.
+    This function takes a dict (converted from JSON) of the current (and optionally
+    future hours) of conditions at a location from the AerisWeather conditions endpoint.
     Using that data and a ruleset defined in evaluate_conditions(), an index value
     is returned from 1 (worst) to 5 (best).
     """
