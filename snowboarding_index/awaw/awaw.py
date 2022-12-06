@@ -33,6 +33,10 @@ def fetch_conditions(location: str = None, num_periods: int = 1) -> dict:
     except requests.exceptions.JSONDecodeError as err:
         raise SystemExit(err)
 
+    if not conditions["success"]:
+        err = conditions["error"]["description"]
+        raise SystemError(err)
+
     return conditions
 
 
