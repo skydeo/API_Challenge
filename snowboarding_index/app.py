@@ -187,7 +187,7 @@ def run() -> None:
         print(sbi)
     else:
         print(
-            f"The snowboarding index for your location is: {sbi.index} ({sbi.index_eng})"
+            f"The snowboarding index for {location} is: {sbi.index} ({sbi.index_eng})"
         )
 
 
