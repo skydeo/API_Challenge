@@ -114,22 +114,34 @@ def calculate_snowboarding_index(
                     AerisWeather conditions endpoint
         return_json: return a formatted JSON string (default False)
 
-    This function takes a dict (converted from JSON) of the current and previous
-    24-hours of conditions at a location from the AerisWeather conditions endpoint.
-    Using that data and a ruleset defined below, an index value is returned from
-    1 (worst) to 5 (best).
+    This function takes a dict (converted from JSON) of the current and future
+    12 hours of conditions at a location from the AerisWeather conditions endpoint.
+    Using that data and a ruleset defined in evaluate_conditions(), an index value
+    is returned from 1 (worst) to 5 (best).
     """
+
+    SBI_Index = namedtuple("SBI", ["index", "index_eng"])
 
     try:
         periods = conditions["response"][0]["periods"]
     except KeyError:
-        return 0
+        index = 0
+        return SBI_Index(index, index_eng[index])
 
+    # Calculate the weighted sbi per period by
+    #   1) Calculating the sbi for each period
+    #   2) Creating a weight list, with weights proportionally decreasing/period
+    #   3) Multiply the hourly indices by the corresponding weight
     hourly_index_values = [evaluate_conditions(period) for period in periods]
-    weights = range(len(hourly_index_values) + 1)[::-1][:-1]
+    weights = sorted(range(1, len(hourly_index_values) + 1), reverse=True)
     weighted_scores = [a * b for a, b in zip(hourly_index_values, weights)]
 
-    index = int(sum(weighted_scores) / sum(weights))
+    # index = int(sum(weighted_scores) / sum(weights))
+    # Added a fudge factor as a cheat to properly weighting different sbi parameters
+    fudge_factor = 1.5
+    index = sum(weighted_scores) / sum(weights)
+    index = min(index * fudge_factor, 5)
+    index = int(index)
 
     index_eng = {
         0: "Unavailable",
@@ -141,10 +153,8 @@ def calculate_snowboarding_index(
     }
 
     if json_format:
-        index_json = index_to_json(conditions, index, index_eng[index])
-        return index_json
+        return index_to_json(conditions, index, index_eng[index])
 
-    SBI_Index = namedtuple("SBI", ["index", "index_eng"])
     sbi = SBI_Index(index, index_eng[index])
 
     return sbi
