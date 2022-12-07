@@ -20,11 +20,13 @@ Once installed, execute by `python -m snowboarding_index`. If no location is pro
 
 #### Flags
 `-l, --location`: supply a location, either as a ZIP code or human readable name (e.g., Minneapolis, MN)
+
 `-j, --json`: export a JSON string matching the AerisWeather Index API format
+
 `-h, --help`: this information presented in the terminal.
 
 ## Setup
-See [combined installation commands](#commands) for quick copy-paste installation.
+See [combined installation commands](#combined-installation-commands) for quick copy-paste installation.
 
 #### Manual Installation
 1. Download the code from Github manually or with git:
