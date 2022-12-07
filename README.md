@@ -14,8 +14,8 @@ This program calculates and outputs a snowboarding index (SBI) for a supplied lo
 Once installed, execute by `python -m snowboarding_index`. If no location is provided, IP address geolocation will be used.
 
 #### Examples
-`python -m snowboarding_index -l 12345`
-`python -m snowboarding_index -l "minneapolis, mn"`
+`python3 -m snowboarding_index -l 12345`
+`python3 -m snowboarding_index -l "minneapolis, mn"`
 
 #### Flags
 `-l, --location`: supply a location, either as a ZIP code or human readable name (e.g., Minneapolis, MN)
@@ -35,13 +35,13 @@ See [combined installation commands](#commands) for quick copy-paste installatio
 4. Install requirements
 `pip install -r requirements.txt`
 5. Run the package
-`python -m snowboarding_index`
+`python3 -m snowboarding_index`
 
 #### Combined Installation Commands
 ```
 git clone git@github.com:skydeo/API_Challenge.git
 cd API_Challenge
-python -m venv venv/
+python3 -m venv venv/
 source venv/bin/activate
 pip install -r requirements.txt
 python3 -m snowboarding_index
