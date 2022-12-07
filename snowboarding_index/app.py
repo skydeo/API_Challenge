@@ -65,7 +65,7 @@ def calculate_snowboarding_index(
         periods = conditions["response"][0]["periods"]
     except KeyError:
         index = 0
-        return SBI_Index(index, index_eng[index])
+        return SBI_Index(index, index_to_eng(sbi))
 
     pdfs = []
     for period in periods:
