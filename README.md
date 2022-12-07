@@ -15,6 +15,7 @@ Once installed, execute by `python -m snowboarding_index`. If no location is pro
 
 #### Examples
 `python3 -m snowboarding_index -l 12345`
+
 `python3 -m snowboarding_index -l "minneapolis, mn"`
 
 #### Flags
@@ -34,10 +35,12 @@ See [combined installation commands](#commands) for quick copy-paste installatio
 `source venv/bin/activate`
 4. Install requirements
 `pip install -r requirements.txt`
-5. Run the package
+5. Configure a .env file in the root directory with an AerisWeather client_id and client_secret
+6. Run the package
 `python3 -m snowboarding_index`
 
 #### Combined Installation Commands
+This assumes an .env files has already been created (step 5 above).
 ```
 git clone git@github.com:skydeo/API_Challenge.git
 cd API_Challenge
