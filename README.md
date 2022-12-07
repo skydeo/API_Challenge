@@ -30,7 +30,7 @@ See [combined installation commands](#commands) for quick copy-paste installatio
 `git clone git@github.com:skydeo/API_Challenge.git`
 2. Navigate to the folder
 3. (Optional) Create and activate a virutal environment: 
-`python -m venv venv/`
+`python3 -m venv venv/`
 `source venv/bin/activate`
 4. Install requirements
 `pip install -r requirements.txt`
@@ -44,5 +44,5 @@ cd API_Challenge
 python -m venv venv/
 source venv/bin/activate
 pip install -r requirements.txt
-python -m snowboarding_index
+python3 -m snowboarding_index
 ```
