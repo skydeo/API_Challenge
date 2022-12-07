@@ -48,14 +48,15 @@ def calculate_snowboarding_index(
 
     Keyword parameter:
         conditions: dictionary representation of a return from the
-                    AerisWeather conditions endpoint
+                    AerisWeather conditions endpoint.
     Optional parameter:
         return_json: (default False) return a JSON string formatted
                      to match the AerisWeather Index API
+        fudge_sbi: fudge the sbi value to more closely match other indices
 
     This function takes a dict (converted from JSON) of the current (and optionally
     future hours) of conditions at a location from the AerisWeather conditions endpoint.
-    Using that data and a ruleset defined in evaluate_conditions(), an index value
+    Using that data and a ruleset defined in the PeriodDataFrame class, an index value
     is returned from 1 (worst) to 5 (best).
     """
 
@@ -67,10 +68,7 @@ def calculate_snowboarding_index(
         index = 0
         return SBI_Index(index, index_to_eng(sbi))
 
-    pdfs = []
-    for period in periods:
-        pdf = json_to_pdf(period)
-        pdfs.append(pdf)
+    pdfs = [json_to_pdf(period) for period in periods]
 
     hourly_sbi_values = [pdf.calculate_sbi_score() for pdf in pdfs]
     weighted_sbi = calculate_weighted_sbi(hourly_sbi_values)
@@ -80,7 +78,12 @@ def calculate_snowboarding_index(
     sbi = round(weighted_sbi)
 
     if json_format:
-        return index_to_json(conditions, sbi, index_to_eng(sbi))
+        try:
+            formatted_json = index_to_json(conditions, sbi, index_to_eng(sbi))
+        except KeyError:
+            index = 0
+            return SBI_Index(index, index_to_eng(sbi))
+        return formatted_json
 
     index = SBI_Index(sbi, index_to_eng(sbi))
 
@@ -107,7 +110,7 @@ def run() -> None:
         "-ff",
         "--fudge_factor",
         action="store_false",
-        help="Fudge the SBI to more closely match the AerisWeather Index endpoint.",
+        help="Don't fudge the SBI to more closely match the AerisWeather Index endpoint.",
     )
 
     args = parser.parse_args()
@@ -123,6 +126,7 @@ def run() -> None:
     sbi = calculate_snowboarding_index(
         conditions, json_format=return_json, fudge_sbi=fudge_sbi
     )
+
     if return_json:
         print(sbi)
     else:

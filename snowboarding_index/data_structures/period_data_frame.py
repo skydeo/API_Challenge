@@ -3,26 +3,23 @@ from dataclasses import dataclass
 
 @dataclass
 class PeriodDataFrame:
-    """Class for keeping track of SBI relevant data.
-    #TODO: clean this up
-    Takes in the conditions for a given time period (from the AerisWeather API),
-    and converts it to an index value based on the ruleset below. The different
-    parameters have different weights and scoring conditions depending on data
-    type.
+    """Class for keeping track of SBI relevant data and functions. Stores the relevant
+    data values, includes functions to score these based on rules and weights, and
+    return a sum weighted index value.
 
     Weighting:
         snowIN: 4
+        snowRateIN: 1
         tempC: 2
         feelslikeC: 1
         windSpeedMPH: 2
-        snowRateIN: 1
 
     Scoring:
-        snowIN: proportional scale from min 0.1 up to max of 0.5in/hr
-        snowRateIN: proportional scale frommin 0.05  to max of 0.1in/hr
-        tempC: binary, must be below freezing
-        feelslikeC: scales down from target value (2C)to +/- range (12C) on both sides of target
-        windSpeedMPH: inverse scale from min 0mph to max 20mph
+        snowIN:         proportional scale from min 0.1 up to max of 0.5in/hr
+        snowRateIN:     proportional scale frommin 0.05  to max of 0.1in/hr
+        tempC:          binary, must be below freezing
+        feelslikeC:     scales down from target value (2C)to +/- range (12C) on both sides of target
+        windSpeedMPH:   inverse scale from min 0mph to max 20mph
     """
 
     snowIN: float
@@ -48,7 +45,7 @@ class PeriodDataFrame:
     }
 
     def score_snowIN(self) -> float:
-        if self.snowIN <= self.rules["snowIN"]["min"]:
+        if self.snowIN < self.rules["snowIN"]["min"]:
             score = 0
         elif self.snowIN >= self.rules["snowIN"]["max"]:
             score = 1

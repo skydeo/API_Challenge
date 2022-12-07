@@ -1,6 +1,7 @@
+import os
+
 import requests
 from dotenv import load_dotenv
-import os
 
 
 def fetch_conditions(location: str = None, num_hours: int = 1) -> dict:

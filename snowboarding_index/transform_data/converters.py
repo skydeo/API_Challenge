@@ -1,4 +1,5 @@
 import json
+
 from snowboarding_index.data_structures.period_data_frame import PeriodDataFrame
 
 
@@ -11,9 +12,9 @@ def json_to_pdf(conditions: dict) -> PeriodDataFrame:
 
     snowIN = conditions["snowIN"] if "snowIN" in data_types else 0
     snowRateIN = conditions["snowRateIN"] if "snowRateIN" in data_types else 0
-    tempC = conditions["tempC"] if "tempC" in data_types else 0
-    feelslikeC = conditions["feelslikeC"] if "feelslikeC" in data_types else 0
-    windSpeedMPH = conditions["windSpeedMPH"] if "windSpeedMPH" in data_types else 0
+    tempC = conditions["tempC"] if "tempC" in data_types else 100
+    feelslikeC = conditions["feelslikeC"] if "feelslikeC" in data_types else 100
+    windSpeedMPH = conditions["windSpeedMPH"] if "windSpeedMPH" in data_types else 100
 
     pdf = PeriodDataFrame(
         snowIN=snowIN,
@@ -27,8 +28,8 @@ def json_to_pdf(conditions: dict) -> PeriodDataFrame:
 
 
 def index_to_json(conditions: dict, index: int, index_eng: str):
-    """
-    #TODO fill this in
+    """Given an index value and english rating equivalent, output a JSON
+    string that matches other AerisWeather Index API output.
     """
     index_json = {
         "success": conditions["success"],
