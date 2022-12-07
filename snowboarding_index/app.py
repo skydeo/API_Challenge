@@ -1,6 +1,6 @@
 import argparse
 from collections import namedtuple
-from typing import Union
+from typing import NamedTuple
 
 from snowboarding_index.transform_data.index_to_json import index_to_json
 from snowboarding_index.awaw.awaw import fetch_conditions
@@ -107,7 +107,7 @@ def evaluate_conditions(conditions: dict) -> int:
 
 def calculate_snowboarding_index(
     conditions: dict, json_format: bool = False
-) -> Union[int, str]:
+) -> NamedTuple:
     """Calculate the Snowboarding Index (SBI).
 
     Keyword parameter:
@@ -123,7 +123,7 @@ def calculate_snowboarding_index(
     is returned from 1 (worst) to 5 (best).
     """
 
-    SBI_Index = namedtuple("SBI", ["index", "index_eng"])
+    SBI_Index = NamedTuple("SBI", [("index", int), ("index_eng", str)])
 
     try:
         periods = conditions["response"][0]["periods"]
