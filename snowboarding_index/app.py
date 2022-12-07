@@ -1,112 +1,48 @@
 import argparse
-from collections import namedtuple
 from typing import NamedTuple
 
-from snowboarding_index.transform_data.index_to_json import index_to_json
 from snowboarding_index.awaw.awaw import fetch_conditions
+from snowboarding_index.transform_data.converters import index_to_json, json_to_pdf
 
 
-def evaluate_conditions(conditions: dict) -> int:
-    """Takes in the conditions for a given time period (from the AerisWeather API),
-    and converts it to an index value based on the ruleset below. The different
-    parameters have different weights and scoring conditions depending on data
-    type.
+def calculate_weighted_sbi(hourly_sbi_values: list[float]) -> float:
+    weights = sorted(range(1, len(hourly_sbi_values) + 1), reverse=True)
+    weighted_scores = [a * b for a, b in zip(hourly_sbi_values, weights)]
+    weighted_sbi = sum(weighted_scores) / sum(weights)
+    return weighted_sbi
 
-    Weighting:
-        snowIN: 4
-        tempC: 2
-        feelslikeC: 1
-        windSpeedMPH: 2
-        snowRateIN: 1
 
-    Scoring:
-        snowIN: proportional scale from min 0.1 up to max of 0.5in/hr
-        snowRateIN: proportional scale frommin 0.05  to max of 0.1in/hr
-        tempC: binary, must be below freezing
-        feelslikeC: scales down from target value (2C)to +/- range (12C) on both sides of target
-        windSpeedMPH: inverse scale from min 0mph to max 20mph
-    """
+def fudge_sbi_score(weighted_sbi: float, fudge_factor: float) -> float:
+    fudged_sbi = min(weighted_sbi * fudge_factor, 5)
+    return fudged_sbi
 
-    weights = {
-        "snowIN": 2,
-        "snowRateIN": 0.5,
-        "tempC": 1,
-        "feelslikeC": 0.5,
-        "windSpeedMPH": 1,
+
+def beautify_name(place: dict) -> str:
+    place_name = (
+        place["name"].title()
+        + ", "
+        + place["state"].upper()
+        + ", "
+        + place["country"].upper()
+    )
+    return place_name
+
+
+def index_to_eng(index: int) -> str:
+    index_eng = {
+        0: "Unavailable",
+        1: "bad",
+        2: "poor",
+        3: "good",
+        4: "very good",
+        5: "excellent",
     }
 
-    rules = {
-        "snowIN": {"min": 0.1, "max": 0.5},
-        "snowRateIN": {"min": 0.05, "max": 0.1},
-        "tempC": {"max": 0},
-        "feelslikeC": {"target": 2, "range": 12},
-        "windSpeedMPH": {"target": 0, "upper_bound": 20},
-    }
-
-    index = 0
-
-    keys = conditions.keys()
-
-    if "snowIN" in keys:
-        snowIN = conditions["snowIN"]
-        if snowIN < rules["snowIN"]["min"]:
-            score = 0
-        elif snowIN > rules["snowIN"]["max"]:
-            score = 1
-        else:
-            score = snowIN / (rules["snowIN"]["max"] - rules["snowIN"]["min"])
-        weighted_score = score * weights["snowIN"]
-        index += weighted_score
-
-    if "snowRateIN" in keys:
-        snowRateIN = conditions["snowRateIN"]
-        if snowRateIN < rules["snowRateIN"]["min"]:
-            score = 0
-        elif snowRateIN >= rules["snowRateIN"]["max"]:
-            score = 1
-        else:
-            score = snowRateIN / (
-                rules["snowRateIN"]["max"] - rules["snowRateIN"]["min"]
-            )
-        weighted_score = score * weights["snowRateIN"]
-        index += weighted_score
-
-    if "tempC" in keys:
-        tempC = conditions["tempC"]
-        if tempC > rules["tempC"]["max"]:
-            score = 0
-        else:
-            score = 1
-        weighted_score = score * weights["tempC"]
-        index += weighted_score
-
-    if "feelslikeC" in keys:
-        feelslikeC = conditions["feelslikeC"]
-        target = rules["feelslikeC"]["target"]
-        range = rules["feelslikeC"]["range"]
-        rangeMax = target + range
-        rangeMin = target - range
-        if (feelslikeC > rangeMax) or (feelslikeC < rangeMin):
-            score = 0
-        else:
-            score = 1 - (abs(target - feelslikeC) / range)
-        weighted_score = score * weights["feelslikeC"]
-        index += weighted_score
-
-    if "windSpeedMPH" in keys:
-        windSpeedMPH = conditions["windSpeedMPH"]
-        if windSpeedMPH > rules["windSpeedMPH"]["upper_bound"]:
-            score = 0
-        else:
-            score = 1 - (windSpeedMPH / rules["windSpeedMPH"]["upper_bound"])
-        weighted_score = score * weights["windSpeedMPH"]
-        index += weighted_score
-
-    return index
+    return index_eng[index]
 
 
 def calculate_snowboarding_index(
-    conditions: dict, json_format: bool = False
+    conditions: dict, json_format: bool = False, fudge_sbi: bool = True
 ) -> NamedTuple:
     """Calculate the Snowboarding Index (SBI).
 
@@ -129,38 +65,26 @@ def calculate_snowboarding_index(
         periods = conditions["response"][0]["periods"]
     except KeyError:
         index = 0
-        return SBI_Index(index, index_eng[index])
+        return SBI_Index(index, index_to_eng(sbi))
 
-    # Calculate the weighted sbi per period by
-    #   1) Calculating the sbi for each period
-    #   2) Creating a weight list, with weights proportionally decreasing/period
-    #   3) Multiply the hourly indices by the corresponding weight
-    hourly_index_values = [evaluate_conditions(period) for period in periods]
-    weights = sorted(range(1, len(hourly_index_values) + 1), reverse=True)
-    weighted_scores = [a * b for a, b in zip(hourly_index_values, weights)]
+    pdfs = []
+    for period in periods:
+        pdf = json_to_pdf(period)
+        pdfs.append(pdf)
 
-    # index = int(sum(weighted_scores) / sum(weights))
-    # Added a fudge factor as a cheat to properly weighting different sbi parameters
-    fudge_factor = 1.5
-    index = sum(weighted_scores) / sum(weights)
-    index = min(index * fudge_factor, 5)
-    index = int(index)
+    hourly_sbi_values = [pdf.calculate_sbi_score() for pdf in pdfs]
+    weighted_sbi = calculate_weighted_sbi(hourly_sbi_values)
+    if fudge_sbi:
+        weighted_sbi = fudge_sbi_score(weighted_sbi, 1.5)
 
-    index_eng = {
-        0: "Unavailable",
-        1: "bad",
-        2: "poor",
-        3: "good",
-        4: "very good",
-        5: "excellent",
-    }
+    sbi = round(weighted_sbi)
 
     if json_format:
-        return index_to_json(conditions, index, index_eng[index])
+        return index_to_json(conditions, sbi, index_to_eng(sbi))
 
-    sbi = SBI_Index(index, index_eng[index])
+    index = SBI_Index(sbi, index_to_eng(sbi))
 
-    return sbi
+    return index
 
 
 def run() -> None:
@@ -179,22 +103,26 @@ def run() -> None:
         action="store_true",
         help="Display SBI in a JSON format matching the AerisWeather Index endpoint.",
     )
+    parser.add_argument(
+        "-ff",
+        "--fudge_factor",
+        action="store_false",
+        help="Fudge the SBI to more closely match the AerisWeather Index endpoint.",
+    )
 
     args = parser.parse_args()
 
     location = args.location
     return_json = args.json
+    fudge_sbi = args.fudge_factor
 
     conditions = fetch_conditions(location=location, num_hours=8)
-    place_name = (
-        conditions["response"][0]["place"]["name"].title()
-        + ", "
-        + conditions["response"][0]["place"]["state"].upper()
-        + ", "
-        + conditions["response"][0]["place"]["country"].upper()
-    )
 
-    sbi = calculate_snowboarding_index(conditions, json_format=return_json)
+    place_name = beautify_name(conditions["response"][0]["place"])
+
+    sbi = calculate_snowboarding_index(
+        conditions, json_format=return_json, fudge_sbi=fudge_sbi
+    )
     if return_json:
         print(sbi)
     else:
