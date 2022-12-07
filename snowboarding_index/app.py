@@ -38,6 +38,9 @@ def index_to_eng(index: int) -> str:
         5: "excellent",
     }
 
+    if index not in index_eng:
+        index = 0
+
     return index_eng[index]
 
 
