@@ -50,7 +50,7 @@ class PeriodDataFrame:
         elif self.snowIN >= self.rules["snowIN"]["max"]:
             score = 1
         else:
-            score = self.snowIN / (
+            score = (self.snowIN - self.rules["snowIN"]["min"]) / (
                 self.rules["snowIN"]["max"] - self.rules["snowIN"]["min"]
             )
         return score * self.weights["snowIN"]
@@ -61,7 +61,7 @@ class PeriodDataFrame:
         elif self.snowRateIN >= self.rules["snowRateIN"]["max"]:
             score = 1
         else:
-            score = self.snowRateIN / (
+            score = (self.snowRateIN - self.rules["snowRateIN"]["min"]) / (
                 self.rules["snowRateIN"]["max"] - self.rules["snowRateIN"]["min"]
             )
         return score * self.weights["snowRateIN"]

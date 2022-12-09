@@ -56,12 +56,12 @@ class TestPeriodDataFrame(unittest.TestCase):
         result = PeriodDataFrame(
             snowIN=0.3, snowRateIN=0.1, tempC=1, feelslikeC=-4, windSpeedMPH=10
         )
-        self.assertAlmostEqual(result.score_snowIN(), 1.5)
+        self.assertAlmostEqual(result.score_snowIN(), 1)
         self.assertAlmostEqual(result.score_snowRateIN(), 0.5)
         self.assertEqual(result.score_tempC(), 0)
         self.assertAlmostEqual(result.score_feelslikeC(), 0.25)
         self.assertAlmostEqual(result.score_windSpeedMPH(), 0.5)
-        self.assertAlmostEqual(result.calculate_sbi_score(), 2.75)
+        self.assertAlmostEqual(result.calculate_sbi_score(), 2.25)
 
 
 if __name__ == "__main__":
